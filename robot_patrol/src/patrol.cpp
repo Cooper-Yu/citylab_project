@@ -20,11 +20,11 @@ public:
     {
         auto qos = rclcpp::QoS(10).reliability(rclcpp::ReliabilityPolicy::Reliable);  
         laser_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-            "fastbot_1/scan",
+            "/scan",
             qos,
             std::bind(&Patrol::laserscan_callback, this, std::placeholders::_1)
         );
-        twist_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("fastbot_1/cmd_vel", 10);
+        twist_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
 
         timer_ = this->create_wall_timer(
             std::chrono::milliseconds(100),
@@ -80,7 +80,6 @@ private:
                 obstacle_ahead_ = false;
             }
         }
-        // If obstacle detected, find best direction (maximum distance)
         if (obstacle_ahead_) {
             float max_distance = -1.0f;
 
