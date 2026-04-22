@@ -108,6 +108,25 @@ private:
         );
     }
 
+    void control_loop()
+    {
+        geometry_msgs::msg::Twist cmd;
+        if(obstacle_ahead_== false) {
+            cmd.linear.x = 0.1;
+            cmd.angular.z = 0;
+        }
+        else {
+            cmd.linear.x = 0.1;
+            cmd.angular.z = direction_ / 2;     
+        }
+        
+        twist_pub_->publish(cmd);
+        
+
+        
+        
+    }
+
 };
 
 
