@@ -44,6 +44,17 @@ private:
     int best_index_;
     bool obstacle_ahead_;
 
+
+    bool is_finite_range(float r) const
+    {
+        return std::isfinite(r);
+    }
+
+    bool is_obstacle_range(float r) const
+    {
+        return std::isfinite(r) && r < 0.35f;
+    }
+
 };
 
 
