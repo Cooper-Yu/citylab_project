@@ -77,6 +77,35 @@ private:
                 obstacle_ahead_ = false;
             }
         }
+        if (obstacle_ahead_) {
+            float max_distance = -1.0f;
+
+            for (int i = start_index; i <= end_index; ++i) {
+                float r = laser_ranges[i];
+
+                if (!is_finite_range(r)) {
+                    continue;
+                }
+
+                if (r > max_distance) {
+                    max_distance = r;
+                    best_index_ = i;
+                }
+            }
+
+            if (best_index_ != -1) {
+                direction_ = msg->angle_min + best_index_ * msg->angle_increment;
+            }
+        }
+
+        RCLCPP_INFO_THROTTLE(
+            this->get_logger(),
+            *this->get_clock(),
+            1000,
+            "obstacle_ahead=%s, direction=%.3f rad",
+            obstacle_ahead_ ? "true" : "false",
+            direction_
+        );
     }
 
 };
