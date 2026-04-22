@@ -55,6 +55,30 @@ private:
         return std::isfinite(r) && r < 0.35f;
     }
 
+    void laserscan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
+    {
+        const auto & laser_ranges = msg->ranges;
+
+        int start_index = static_cast<int>((-M_PI / 2.0 - msg->angle_min) / msg->angle_increment);
+        int end_index   = static_cast<int>(( M_PI / 2.0 - msg->angle_min) / msg->angle_increment);
+
+        start_index = std::max(0, start_index);
+        end_index   = std::min(static_cast<int>(laser_ranges.size()) - 1, end_index);
+
+        int obstacle_start_index = static_cast<int>((-M_PI / 9 - msg->angle_min) / msg->angle_increment);
+        int obstacle_end_index = static_cast<int>((M_PI / 9 - msg->angle_min) / msg->angle_increment);
+        for (int i = obstacle_start_index; i <= obstacle_end_index; ++i) {
+            float r = laser_ranges[i];
+            if (is_obstacle_range(r)) {
+                obstacle_ahead_ = true;
+                break;
+            } 
+            else {
+                obstacle_ahead_ = false;
+            }
+        }
+    }
+
 };
 
 
