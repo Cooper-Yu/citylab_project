@@ -44,29 +44,32 @@ private:
     int best_index_;
     bool obstacle_ahead_;
 
-
+    // Check if a LaserScan value is finite (not inf or NaN)
     bool is_finite_range(float r) const
     {
         return std::isfinite(r);
     }
 
+    // Check if a LaserScan value indicates a nearby obstacle
     bool is_obstacle_range(float r) const
     {
         return std::isfinite(r) && r < 0.35f;
     }
 
+    // Callback function: process LaserScan data
     void laserscan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
     {
         const auto & laser_ranges = msg->ranges;
-
+        // Define forward field of view [-90°, +90°]
         int start_index = static_cast<int>((-M_PI / 2.0 - msg->angle_min) / msg->angle_increment);
         int end_index   = static_cast<int>(( M_PI / 2.0 - msg->angle_min) / msg->angle_increment);
-
+        // Clamp indices to valid range
         start_index = std::max(0, start_index);
         end_index   = std::min(static_cast<int>(laser_ranges.size()) - 1, end_index);
-
+        // Define narrow front sector for obstacle detection [-20°, +20°]
         int obstacle_start_index = static_cast<int>((-M_PI / 9 - msg->angle_min) / msg->angle_increment);
         int obstacle_end_index = static_cast<int>((M_PI / 9 - msg->angle_min) / msg->angle_increment);
+        // Detect obstacle in front sector
         for (int i = obstacle_start_index; i <= obstacle_end_index; ++i) {
             float r = laser_ranges[i];
             if (is_obstacle_range(r)) {
@@ -77,6 +80,7 @@ private:
                 obstacle_ahead_ = false;
             }
         }
+        // If obstacle detected, find best direction (maximum distance)
         if (obstacle_ahead_) {
             float max_distance = -1.0f;
 
@@ -107,7 +111,7 @@ private:
             direction_
         );
     }
-
+    // Control loop: decide robot motion based on obstacle state
     void control_loop()
     {
         geometry_msgs::msg::Twist cmd;
