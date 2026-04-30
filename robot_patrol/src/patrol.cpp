@@ -3,8 +3,6 @@
 #include "geometry_msgs/msg/twist.hpp"
 #include "rclcpp/qos.hpp"
 #include <cmath>
-#include <limits>
-#include <vector>
 #include <algorithm>
 #include <functional>
 #include <chrono>
@@ -15,15 +13,16 @@ public:
     Patrol() 
     : Node("patrol_node"),
       direction_(0.0), 
-      best_index_(-1),
       obstacle_ahead_(false)
     {
         auto qos = rclcpp::QoS(10).reliability(rclcpp::ReliabilityPolicy::Reliable);  
+
         laser_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
             "fastbot_1/scan",
             qos,
             std::bind(&Patrol::laserscan_callback, this, std::placeholders::_1)
         );
+
         twist_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("fastbot_1/cmd_vel", 10);
 
         timer_ = this->create_wall_timer(
@@ -32,76 +31,76 @@ public:
         );
 
         RCLCPP_INFO(this->get_logger(), "Patrol node started.");
-    
     }
 
 private:
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_sub_;
-    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr  twist_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr twist_pub_;
     rclcpp::TimerBase::SharedPtr timer_;
 
     double direction_;
-    int best_index_;
     bool obstacle_ahead_;
-
-    // Check if a LaserScan value is finite (not inf or NaN)
+    // Filter out rays with a value of inf
     bool is_finite_range(float r) const
     {
         return std::isfinite(r);
     }
-
-    // Check if a LaserScan value indicates a nearby obstacle
+    // Detecting obstacles
     bool is_obstacle_range(float r) const
     {
-        return std::isfinite(r) && r < 0.35f;
+        return std::isfinite(r) && r < 0.35f;   
+    }
+    // Convert the angle range to -pi ~ pi
+    double normalize_angle(double angle)
+    {
+        while (angle > M_PI) {
+            angle -= 2.0 * M_PI;
+        }
+        while (angle < -M_PI) {
+            angle += 2.0 * M_PI;
+        }
+        return angle;
     }
 
-    // Callback function: process LaserScan data
     void laserscan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
     {
-        const auto & laser_ranges = msg->ranges;
-        // Define forward field of view [-90°, +90°]
-        int start_index = static_cast<int>((-M_PI / 2.0 - msg->angle_min) / msg->angle_increment);
-        int end_index   = static_cast<int>(( M_PI / 2.0 - msg->angle_min) / msg->angle_increment);
-        // Clamp indices to valid range
-        start_index = std::max(0, start_index);
-        end_index   = std::min(static_cast<int>(laser_ranges.size()) - 1, end_index);
-        // Define narrow front sector for obstacle detection [-20°, +20°]
-        int obstacle_start_index = static_cast<int>((-M_PI / 9 - msg->angle_min) / msg->angle_increment);
-        int obstacle_end_index = static_cast<int>((M_PI / 9 - msg->angle_min) / msg->angle_increment);
-        // Detect obstacle in front sector
-        for (int i = obstacle_start_index; i <= obstacle_end_index; ++i) {
-            float r = laser_ranges[i];
-            if (is_obstacle_range(r)) {
-                obstacle_ahead_ = true;
-                break;
-            } 
-            else {
-                obstacle_ahead_ = false;
+        const auto& ranges = msg->ranges;
+
+        obstacle_ahead_ = false;
+
+        double best_angle = 0.0;
+        float max_distance = -1.0f;
+
+        for (size_t i = 0; i < ranges.size(); ++i) {
+            float r = ranges[i];
+
+            if (!is_finite_range(r)) {
+                continue;
             }
-        }
-        // If obstacle detected, find best direction (maximum distance)
-        if (obstacle_ahead_) {
-            float max_distance = -1.0f;
 
-            for (int i = start_index; i <= end_index; ++i) {
-                float r = laser_ranges[i];
+            double raw_angle = msg->angle_min + static_cast<double>(i) * msg->angle_increment;
 
-                if (!is_finite_range(r)) {
-                    continue;
+            // Real-world robots might be 0 ~ 2pi, but here we'll convert them to -pi ~ pi.
+            double angle = normalize_angle(raw_angle);
+
+            // 1. Directly in front (window): [-20°, +20°]
+            if (angle >= -M_PI / 9.0 && angle <= M_PI / 9.0) {
+                if (is_obstacle_range(r)) {
+                    obstacle_ahead_ = true;
                 }
+            }
 
+            // 2. Only find the farthest ray within a 180° range in front.
+            if (angle >= -M_PI / 2.0 && angle <= M_PI / 2.0) {
                 if (r > max_distance) {
                     max_distance = r;
-                    best_index_ = i;
+                    best_angle = angle;
                 }
-            }
-
-            if (best_index_ != -1) {
-                direction_ = msg->angle_min + best_index_ * msg->angle_increment;
             }
         }
 
+        direction_ = best_angle;
+        // Print basic information such as the direction of obstacles.
         RCLCPP_INFO_THROTTLE(
             this->get_logger(),
             *this->get_clock(),
@@ -111,41 +110,32 @@ private:
             direction_
         );
     }
-    // Control loop: decide robot motion based on obstacle state
+
+    // The motion logic of the car
     void control_loop()
     {
         geometry_msgs::msg::Twist cmd;
-        if(obstacle_ahead_== false) {
+
+        if (!obstacle_ahead_) {
+            // no obstacle aheard, move forward
             cmd.linear.x = 0.1;
-            cmd.angular.z = 0;
+            cmd.angular.z = 0.0;
         }
         else {
+            // There is an obstacle ahead; turn towards the direction of the furthest ray
             cmd.linear.x = 0.1;
-            cmd.angular.z = direction_ / 2;     
+            cmd.angular.z = direction_ / 2;
         }
-        
+
         twist_pub_->publish(cmd);
-        
-
-        
-        
     }
-
 };
-
-
 
 int main(int argc, char** argv) 
 {
     rclcpp::init(argc, argv);
-
     auto node = std::make_shared<Patrol>();
-
     rclcpp::spin(node);
-
     rclcpp::shutdown();
     return 0;
-
 }
-
-
