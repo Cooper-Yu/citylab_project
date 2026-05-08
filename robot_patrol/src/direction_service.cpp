@@ -5,12 +5,10 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "custom_interfaces/srv/get_direction.hpp"
-#include "sensor_msgs/msg/laser_scan.hpp"
 class DirectionService : public rclcpp::Node 
 {
 public:
     using GetDirection = custom_interfaces::srv::GetDirection;
-    using std::placeholders;
     DirectionService() 
     : Node("direction_service")
     {
@@ -19,7 +17,7 @@ public:
         this->service_ = this->create_service<GetDirection>(
             service_name, 
             std::bind(&DirectionService::get_direction_callback, this,
-                    _1, _2));
+                    std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s Service Server Ready...", service_name.c_str());
         // //Create a subscriber that will receive the current laser data
         // auto qos = rclcpp::QoS(10).reliability(rclcpp::ReliabilityPolicy::Reliable);
@@ -38,6 +36,7 @@ private:
         const std::shared_ptr<GetDirection::Request> request,
         std::shared_ptr<GetDirection::Response> response)
     {
+        RCLCPP_INFO(this->get_logger(), "Service Requested");
         float total_dist_sec_right = 0;
         float total_dist_sec_front = 0;
         float total_dist_sec_left = 0;
@@ -98,6 +97,7 @@ private:
             front_min,
             response->direction.c_str()
         );
+        RCLCPP_INFO(this->get_logger(), "Service Completed");
     }
     
 
