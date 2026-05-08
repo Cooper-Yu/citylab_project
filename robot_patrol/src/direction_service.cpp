@@ -19,19 +19,12 @@ public:
             std::bind(&DirectionService::get_direction_callback, this,
                     std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(this->get_logger(), "%s Service Server Ready...", service_name.c_str());
-        // //Create a subscriber that will receive the current laser data
-        // auto qos = rclcpp::QoS(10).reliability(rclcpp::ReliabilityPolicy::Reliable);
-        // this->laser_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-        //     "fastbot_1/scan",
-        //     qos,
-        //     std::bind(&Patrol::laserscan_callback, this, std::placeholders::_1)
-        // );
+        
     }
 
 private:
     rclcpp::Service<GetDirection>::SharedPtr service_;
-    // rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_sub_;
-    // sensor_msgs::msg::LaserScan::SharedPtr latest_laser_data_;
+    
     void get_direction_callback(
         const std::shared_ptr<GetDirection::Request> request,
         std::shared_ptr<GetDirection::Response> response)
@@ -101,10 +94,7 @@ private:
     }
     
 
-    // void laserscan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
-    // {
-    //     latest_laser_data = msg;
-    // }
+    
 };
 
 

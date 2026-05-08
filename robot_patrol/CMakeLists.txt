@@ -14,6 +14,8 @@ find_package(custom_interfaces REQUIRED)
 # add executables
 add_executable(patrol_node src/patrol.cpp)
 add_executable(direction_service_server src/direction_service.cpp)
+add_executable(test_service_client src/test_service.cpp)
+
 ament_target_dependencies(patrol_node
   rclcpp
   sensor_msgs
@@ -25,9 +27,16 @@ ament_target_dependencies(direction_service_server
   custom_interfaces
 )
 
+ament_target_dependencies(test_service_client
+  rclcpp
+  sensor_msgs
+  custom_interfaces
+)
+
 install(TARGETS
   patrol_node
   direction_service_server
+  test_service_client
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -47,5 +56,6 @@ if(BUILD_TESTING)
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
+
 
 ament_package()
