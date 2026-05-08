@@ -57,7 +57,7 @@ private:
         // Loop through all laser rays
         for (size_t i = 0; i < laser.ranges.size(); i++)
         {
-            float angle = laser.angle_min + i * laser.angle_increment;
+            float raw_angle = laser.angle_min + i * laser.angle_increment;
             double angle = normalize_angle(raw_angle);
             float dist = laser.ranges[i];
             // Ignore invalid readings (inf or NaN)

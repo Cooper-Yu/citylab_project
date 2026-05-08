@@ -59,8 +59,6 @@ public:
         RCLCPP_INFO(this->get_logger(), "Service Request");
 
 
-        // Send the request asynchronously
-        auto result_future = client_->async_send_request(request);
 
         //Asynchronous request sending
         client_->async_send_request(
