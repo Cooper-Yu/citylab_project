@@ -33,8 +33,6 @@ private:
         float total_dist_sec_right = 0;
         float total_dist_sec_front = 0;
         float total_dist_sec_left = 0;
-        float front_min = std::numeric_limits<double>::infinity();
-
         const auto & laser = request->laser_data;
         for (size_t i = 0; i < laser.ranges.size(); i++)
         {
@@ -54,9 +52,6 @@ private:
             else if (angle >= -M_PI / 6 && angle <= M_PI / 6) {
                 total_dist_sec_front += dist;
 
-                if (dist < front_min) {
-                    front_min = dist;
-                }
             }
 
             // left section: 30° to 90°
@@ -65,29 +60,26 @@ private:
             }
         }
 
-        // front is safe
-        if (front_min > 0.35) {
+        if (total_dist_sec_front >= total_dist_sec_left &&
+            total_dist_sec_front >= total_dist_sec_right)
+        {
             response->direction = "forward";
         }
-        // front is less than 35 cm, choose safer side
-        else {
-            if (total_dist_sec_left > total_dist_sec_right && total_dist_sec_left > total_dist_sec_front) 
-            {
-                response->direction = "left";
-            } else if(total_dist_sec_right > total_dist_sec_front){
-                response->direction = "right";
-            } else {
-                response->direction = "forward";
-            }
+        else if (total_dist_sec_left > total_dist_sec_right)
+        {
+            response->direction = "left";
+        }
+        else
+        {
+            response->direction = "right";
         }
 
         RCLCPP_INFO(
             this->get_logger(),
-            "right: %.2f, front: %.2f, left: %.2f, front_min: %.2f -> %s",
+            "right: %.2f, front: %.2f, left: %.2f -> %s",
             total_dist_sec_right,
             total_dist_sec_front,
             total_dist_sec_left,
-            front_min,
             response->direction.c_str()
         );
         RCLCPP_INFO(this->get_logger(), "Service Completed");
