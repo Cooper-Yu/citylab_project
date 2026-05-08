@@ -23,7 +23,11 @@ public:
             std::bind(&Patrol::laserscan_callback, this, std::placeholders::_1)
         );
 
+<<<<<<< HEAD
         twist_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
+=======
+        twist_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("fastbot_1/cmd_vel", 10);
+>>>>>>> main
 
         timer_ = this->create_wall_timer(
             std::chrono::milliseconds(100),
