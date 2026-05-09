@@ -48,13 +48,13 @@ public:
         auto qos = rclcpp::QoS(10).reliability(rclcpp::ReliabilityPolicy::Reliable);
         // Subscribe to odometry data (robot position)
         odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
-            "/fastbot_1/odom",
+            "/odom",
             qos,
             std::bind(&GoToPose::odom_callback, this, _1)
         );
         // Publisher to control robot velocity
         twist_pub_ = this->create_publisher<geometry_msgs::msg::Twist>(
-            "/fastbot_1/cmd_vel",
+            "/cmd_vel",
             10
         );
         RCLCPP_INFO(this->get_logger(), "Action Server Ready");
@@ -180,8 +180,8 @@ private:
         rclcpp::Rate rate(10);
         int counter = 0;
         // Tolerances
-        const double distance_tolerance = 0.02;
-        const double angle_tolerance = 0.05;
+        const double distance_tolerance = 0.05;
+        const double angle_tolerance = 0.08;
         // Speed limits
         const double max_linear_speed = 0.2;
         const double max_angular_speed = 0.6;
