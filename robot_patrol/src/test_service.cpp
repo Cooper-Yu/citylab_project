@@ -5,14 +5,14 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
-#include "custom_interfaces/srv/get_direction.hpp"
+#include "robot_patrol/srv/get_direction.hpp"
 
 using namespace std::chrono_literals;
 
 class DirectionServiceClient : public rclcpp::Node 
 {
 public:
-    using GetDirection = custom_interfaces::srv::GetDirection;
+    using GetDirection = robot_patrol::srv::GetDirection;
 
     DirectionServiceClient() 
     : Node("direction_service_client")
