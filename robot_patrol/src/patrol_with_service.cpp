@@ -2,7 +2,7 @@
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "rclcpp/qos.hpp"
-#include "custom_interfaces/srv/get_direction.hpp"
+#include "robot_patrol/srv/get_direction.hpp"
 
 #include <cmath>
 #include <functional>
@@ -13,7 +13,7 @@ class Patrol : public rclcpp::Node
 {
 public: 
     // Alias for the service type
-    using GetDirection = custom_interfaces::srv::GetDirection;
+    using GetDirection = robot_patrol::srv::GetDirection;
 
     Patrol() 
     : Node("patrol_with_service_node"),
