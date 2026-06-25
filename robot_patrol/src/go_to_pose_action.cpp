@@ -128,7 +128,7 @@ private:
         // Store goal position
         desired_pos_.x = goal->goal_pos.x;
         desired_pos_.y = goal->goal_pos.y;
-        desired_pos_.theta = goal->goal_pos.theta;
+        desired_pos_.theta = goal->goal_pos.theta * M_PI / 180.0;
 
         RCLCPP_INFO(this->get_logger(), "Action Called");
 
@@ -180,7 +180,7 @@ private:
         rclcpp::Rate rate(10);
         int counter = 0;
         // Tolerances
-        const double distance_tolerance = 0.02;
+        const double distance_tolerance = 0.03;
         const double angle_tolerance = 0.05;
         // Speed limits
         const double max_linear_speed = 0.2;
@@ -228,7 +228,10 @@ private:
                 else
                 {
                     // Move forward and adjust direction
-                    cmd.linear.x = max_linear_speed;
+            
+                    cmd.linear.x = max_linear_speed;   // 0.20 m/s
+                   
+                    
                     cmd.angular.z = std::clamp(
                         direction / 2.0,
                         -max_angular_speed,
