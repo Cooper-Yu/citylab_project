@@ -128,7 +128,7 @@ private:
         // Store goal position
         desired_pos_.x = goal->goal_pos.x;
         desired_pos_.y = goal->goal_pos.y;
-        desired_pos_.theta = goal->goal_pos.theta;
+        desired_pos_.theta = goal->goal_pos.theta * M_PI / 180.0;
 
         RCLCPP_INFO(this->get_logger(), "Action Called");
 
